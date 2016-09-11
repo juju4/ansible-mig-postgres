@@ -1,0 +1,15 @@
+---
+
+- name: yum | postgres mig dependencies install
+  yum: name={{item}} state=present
+  with_items: "{{ migpostgres_pkg }}"
+
+- name: initialize postgresql
+  command: "postgresql-setup initdb creates=/var/lib/pgsql/initdb.log"
+## Avoid Error: No PostgreSQL clusters exist; see "man pg_createcluster"
+  environment:
+    LC_ALL: "en_US.UTF-8"
+
+- name: yum | Ensure postgresql is running and enabled on boot.
+  service: name=postgresql state=started enabled=yes
+

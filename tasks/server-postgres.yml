@@ -1,0 +1,99 @@
+---
+
+- include: server-postgres-debian.yml
+  when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu')
+
+- include: server-postgres-redhat.yml
+  when: ansible_os_family == "RedHat" or ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: ensure postgres service is started
+  service: name=postgresql state=started
+
+- name: Create local database
+  postgresql_db: name=mig ## OK
+#  postgresql_db: name=mig template="{{ mig_src }}/database/schema.sql"  ## NOK 'PostgreSQL does not support role with more than 1 dots'
+  become: yes
+  become_user: postgres
+
+- name: Create local database user migadmin
+  postgresql_user: db=mig name="migadmin" password="{{ mig_db_migadmin_pass }}" priv=ALL role_attr_flags=NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN
+  become: yes
+  become_user: postgres
+- name: Create local database users
+## which priv? ALL ok but...
+#  postgresql_user: name="{{ item.u }}" password="{{ item.p }}" role_attr_flags=NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN
+  postgresql_user: db=mig name="{{ item.u }}" password="{{ item.p }}" role_attr_flags=NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN priv=ALL
+#  postgresql_user: db=mig name="{{ item.u }}" password="{{ item.p }}" role_attr_flags=NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN priv=CONNECT/investigators:SELECT  ## partial, also actions, agents...
+  with_items:
+    - { u: migapi, p: "{{ mig_db_migapi_pass }}" }
+    - { u: migscheduler, p: "{{ mig_db_migscheduler_pass }}" }
+  become: yes
+  become_user: postgres
+
+- stat: path={{ postgres_confdir }}/.dbinit_mig
+  register: dbinit
+- stat: path="{{ mig_src }}/database/schema.sql"
+  register: dbschema
+- name: Copy sql schema for user postgres
+  command: "rsync -ci --chmod=ugo+r {{ mig_src }}/database/schema.sql /tmp/schema.sql"
+  register: rsync_result
+  changed_when: 'rsync_result.stdout != ""'
+  when: not dbinit.stat.exists and dbschema.stat.exists
+- name: retrieve mig db schema
+  get_url: url=https://raw.githubusercontent.com/mozilla/mig/master/database/schema.sql dest=/tmp/schema.sql mode=0644 checksum='sha256:10e9030b6dc6ceb030e12ddacd27005d404aa16640a77f4c74e0fce24182d212'
+  when: not dbschema.stat.exists
+- name: loading default db schema
+#  shell: "psql mig < {{ mig_src }}/database/schema.sql"
+## NOK: owner of all databases is postgres, not migadmin...
+#  command: "psql -d mig -f {{ mig_src }}/database/schema.sql"
+  command: "psql -d mig -f /tmp/schema.sql"
+  become: yes
+  become_user: postgres
+  when: not dbinit.stat.exists
+- file: dest={{ postgres_confdir }}/.dbinit_mig state=touch
+  when: not dbinit.stat.exists
+
+- block:
+## https://www.postgresql.org/docs/9.1/static/auth-pg-hba-conf.html
+## default is peer + ident (centos) md5 (ubuntu, except if local/user postgres)
+    - name: RedHat | add peer auth for user postgres to pg_hba.conf
+      lineinfile: "dest={{ postgres_confdir }}/pg_hba.conf line='local   all             postgres                                peer' insertbefore='^# \"local\" is for Unix' backup=yes"
+      notify:
+        - restart postgres
+#    - name: RedHat | add md5 auth for loopback host to pg_hba.conf
+#      lineinfile: "dest={{ postgres_confdir }}/pg_hba.conf line={{ item }} insertafter=EOF backup=yes"
+#      with_items:
+#        - 'host    all             all             127.0.0.1/32            md5'
+#        - 'host    all             all             ::1/128                 md5'
+#      notify:
+#        - restart postgres
+    - name: RedHat | update pg_hba.conf local to md5
+      replace: "dest={{ postgres_confdir }}/pg_hba.conf regexp={{ item.re }} replace={{ item.rep }} backup=yes"
+      with_items:
+#        - { re: '^local(\s+)all(\s+)all(\s+)peer', rep: 'local\1all\2all\3md5' } 
+        - { re: '^local(\s+)all(\s+)all(\s+) 127.0.0.1/32(\s+)(.*)', rep: '#local\1all\2all\3 127.0.0.1/32\4\5' } 
+        - { re: '^local(\s+)all(\s+)all(\s+)::1/128(\s+)(.*)', rep: '#local\1all\2all\3::1/128\4\5' } 
+        - { re: '^host(\s+)all(\s+)all(\s+) 127.0.0.1/32(\s+)(.*)', rep: 'host\1all\2all\3 127.0.0.1/32\4md5' } 
+        - { re: '^host(\s+)all(\s+)all(\s+)::1/128(\s+)(.*)', rep: 'host\1all\2all\3::1/128\4md5' } 
+#        - { re: '^host(\s+)all(\s+)all(\s+)(.*?)(\s+).*', rep: 'local\1all\2all\3\4\5md5' } 
+      notify:
+        - restart postgres
+  when: ansible_os_family == "RedHat" or ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- block:
+    - name: allow remote connection from subnet to postgresql - pg_hba.conf
+      lineinfile: "dest={{ postgres_confdir }}/pg_hba.conf line={{ item }} backup=yes"
+      with_items:
+        - "host    all             all             {{ mig_db_subnet_access }}   md5"
+      notify:
+        - restart postgres
+      when: mig_db_subnet_access is defined and mig_db_subnet_access != ''
+    - name: allow remote connection to postgresql - postgresql.conf
+      lineinfile: "dest={{ postgres_confdir }}/postgresql.conf line={{ item }} backup=yes insertafter='^#listen_addresses'"
+      with_items:
+        - "listen_addresses = '{{ mig_db_listen }}'"
+      notify:
+        - restart postgres
+      when: mig_db_listen is defined and mig_db_listen != ''
+  when: mig_db_host is defined and mig_db_host != 'localhost'
+

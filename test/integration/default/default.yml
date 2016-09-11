@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  vars:
+#    - mig_user: mig
+    - mig_enable_auth: false
+  roles:
+    - mig-postgres
+

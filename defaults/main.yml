@@ -1,0 +1,17 @@
+---
+
+mig_home: /var/lib/postgresql
+mig_gopath: "{{ mig_home }}/go"
+mig_src: "{{ mig_gopath }}/src/mig.ninja/mig"
+
+#mig_db_host: localhost
+#mig_db_port: 5432
+mig_db_migadmin_pass: xxx
+mig_db_migapi_pass: xxx
+mig_db_migscheduler_pass: xxx
+
+## if mig_db_host != localhost
+#mig_db_subnet_access: '10.0.0.0/8'
+#mig_db_listen: '10.1.1.100'
+#mig_db_listen: '*'
+

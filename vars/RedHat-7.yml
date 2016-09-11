@@ -1,0 +1,10 @@
+---
+
+postgres_confdir: /var/lib/pgsql/data
+
+migpostgres_pkg:
+    - python-psycopg2
+    - postgresql-server
+    - postgresql-contrib
+## https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+    - acl

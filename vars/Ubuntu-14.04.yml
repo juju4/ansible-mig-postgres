@@ -1,0 +1,9 @@
+---
+
+postgres_confdir: /etc/postgresql/9.3/main
+
+migpostgres_pkg:
+    - python-psycopg2
+    - acl
+    - postgresql-9.3
+
