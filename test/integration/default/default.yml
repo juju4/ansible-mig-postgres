@@ -5,5 +5,5 @@
 #    - mig_user: mig
     - mig_enable_auth: false
   roles:
-    - mig-postgres
+    - juju4.mig-postgres
 
