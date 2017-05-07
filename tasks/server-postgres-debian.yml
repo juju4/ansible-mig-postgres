@@ -22,7 +22,7 @@
 
 - name: create postgres base cluster
   command: "pg_createcluster {{ postgres_v }} main --start"
-  when: pgsqlinstall is defined and pgsqlinstall.stdout_lines.find('No PostgreSQL clusters exist') != -1
+  when: pgsqlinstall is defined and pgsqlinstall.results.stdout_lines.find('No PostgreSQL clusters exist') != -1
   become: postgres
   environment:
     LANG: en_US.UTF-8
