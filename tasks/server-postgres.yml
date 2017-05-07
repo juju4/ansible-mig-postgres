@@ -40,7 +40,11 @@
   changed_when: 'rsync_result.stdout != ""'
   when: not dbinit.stat.exists and dbschema.stat.exists
 - name: retrieve mig db schema
-  get_url: url=https://raw.githubusercontent.com/mozilla/mig/master/database/schema.sql dest=/tmp/schema.sql mode=0644 checksum='sha256:10e9030b6dc6ceb030e12ddacd27005d404aa16640a77f4c74e0fce24182d212'
+  get_url:
+    url: https://raw.githubusercontent.com/mozilla/mig/master/database/schema.sql
+    dest: /tmp/schema.sql
+    mode: '0644'
+    checksum: 'sha256:b7ffa5aea39399dac1da6225096ce7badccafdf9eec90976f27c84b25e347e50'
   when: not dbschema.stat.exists
 - name: loading default db schema
 #  shell: "psql mig < {{ mig_src }}/database/schema.sql"
