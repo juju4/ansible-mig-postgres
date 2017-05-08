@@ -19,13 +19,19 @@
     LC_ALL: en_US.UTF-8
   register: pgsqlinstall
 - debug: var=pgsqlinstall
+- debug: var=pgsqlinstall.results
+- debug: var=pgsqlinstall.results[0]
+- debug: var=pgsqlinstall.results[0].stdout_lines
 
-- name: create postgres base cluster
-  command: "pg_createcluster {{ postgres_v }} main --start"
-  when: pgsqlinstall is defined and pgsqlinstall.results[0].stdout_lines is defined and pgsqlinstall.results[0].stdout_lines.find('No PostgreSQL clusters exist') != -1
-  become: postgres
-  environment:
-    LANG: en_US.UTF-8
-    LANGUAGE: en_US.UTF-8
-    LC_ALL: en_US.UTF-8
+- block:
+    - name: create postgres base cluster
+      command: "pg_createcluster {{ postgres_v }} main --start"
+      become: postgres
+      environment:
+        LANG: en_US.UTF-8
+        LANGUAGE: en_US.UTF-8
+        LC_ALL: en_US.UTF-8
+      when: "'No PostgreSQL clusters exist' in pgsqlinstall.results[0].stdout_lines"
+  when: pgsqlinstall is defined and pgsqlinstall.results[0].stdout_lines is defined
+#  when: pgsqlinstall is defined and pgsqlinstall.results[0].stdout_lines is defined and pgsqlinstall.results[0].stdout_lines.find('No PostgreSQL clusters exist') != -1
 
