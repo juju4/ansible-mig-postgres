@@ -16,7 +16,13 @@
   become_user: postgres
 
 - name: Create local database user migadmin
-  postgresql_user: db=mig name="migadmin" password="{{ mig_db_migadmin_pass }}" priv=ALL role_attr_flags=NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN
+  postgresql_user:
+    db: mig
+    name: "migadmin"
+    password: "{{ mig_db_migadmin_pass }}"
+    priv: ALL
+    role_attr_flags: NOSUPERUSER,INHERIT,NOCREATEROLE,NOCREATEDB,LOGIN
+    encrypted: yes
   become: yes
   become_user: postgres
 - name: Create local database users
