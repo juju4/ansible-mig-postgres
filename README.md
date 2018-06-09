@@ -12,11 +12,11 @@ http://mig.mozilla.org/
 It was tested on the following versions:
  * 1.9
  * 2.0
+ * 2.5
 
 ### Operating systems
 
-Tested with vagrant only on Ubuntu 14.04 for now but should work on 12.04 and similar debian based systems.
-Verified with kitchen against ubuntu14 and centos7
+Tested on Ubuntu 14.04, 16.04, 18.04 and centos7
 
 ## Example Playbook
 
@@ -45,14 +45,14 @@ Default kitchen config (.kitchen.yml) is lxd-based, while (.kitchen.vagrant.yml)
 Once you ensured all necessary roles are present, You can test with:
 ```
 $ gem install kitchen-ansible kitchen-lxd_cli kitchen-sync kitchen-vagrant
-$ cd /path/to/roles/mig-postres
+$ cd /path/to/roles/juju4.mig-postres
 $ kitchen verify
 $ kitchen login
 $ KITCHEN_YAML=".kitchen.vagrant.yml" kitchen verify
 ```
 or
 ```
-$ cd /path/to/roles/mig-postres/test/vagrant
+$ cd /path/to/roles/juju4.mig-postres/test/vagrant
 $ vagrant up
 $ vagrant ssh
 ```
@@ -68,6 +68,7 @@ $ vagrant ssh
 * memory
 Ensure you have enough memory and swap available. On vagrant 512M+swap or 1024M seems to be fine.
 
+* Ubuntu 18.04/Postgresql 10 requires [ansible 2.6](https://github.com/ansible/ansible/issues/25823) so user creation set with encrypted=yes.
 
 ## License
 

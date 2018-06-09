@@ -1,0 +1,9 @@
+---
+
+postgres_confdir: /etc/postgresql/10/main
+
+migpostgres_pkg:
+    - python-psycopg2
+    - postgresql-10
+    - acl
+
