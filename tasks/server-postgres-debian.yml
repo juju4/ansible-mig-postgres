@@ -11,7 +11,7 @@
 - debug: var=env
 
 - name: apt | postgres mig dependencies install
-  apt: name={{item}} state=present
+  apt: name={{ item }} state=present
   with_items: "{{ migpostgres_pkg }}"
   environment:
     LANG: en_US.UTF-8
@@ -34,4 +34,3 @@
       when: "'No PostgreSQL clusters exist' in pgsqlinstall.results[0].stdout_lines"
   when: pgsqlinstall is defined and pgsqlinstall.results[0].stdout_lines is defined
 #  when: pgsqlinstall is defined and pgsqlinstall.results[0].stdout_lines is defined and pgsqlinstall.results[0].stdout_lines.find('No PostgreSQL clusters exist') != -1
-

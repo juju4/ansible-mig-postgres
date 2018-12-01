@@ -6,4 +6,3 @@
     - mig_enable_auth: false
   roles:
     - juju4.mig-postgres
-

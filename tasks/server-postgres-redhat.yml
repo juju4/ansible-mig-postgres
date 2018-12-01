@@ -1,7 +1,7 @@
 ---
 
 - name: yum | postgres mig dependencies install
-  yum: name={{item}} state=present
+  yum: name={{ item }} state=present
   with_items: "{{ migpostgres_pkg }}"
 
 - name: initialize postgresql
@@ -12,4 +12,3 @@
 
 - name: yum | Ensure postgresql is running and enabled on boot.
   service: name=postgresql state=started enabled=yes
-
