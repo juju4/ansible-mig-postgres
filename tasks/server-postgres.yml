@@ -50,7 +50,7 @@
     url: https://raw.githubusercontent.com/mozilla/mig/master/database/schema.sql
     dest: /tmp/schema.sql
     mode: '0644'
-    checksum: 'sha256:b7ffa5aea39399dac1da6225096ce7badccafdf9eec90976f27c84b25e347e50'
+    checksum: 'sha256:f520d6bddea654ded659d26f466175afd17023696dd4a33fd90d9469d2205b2b'
   when: not dbschema.stat.exists
 - name: loading default db schema
 #  shell: "psql mig < {{ mig_src }}/database/schema.sql"
