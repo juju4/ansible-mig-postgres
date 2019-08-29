@@ -1,3 +1,6 @@
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+# DEPRECATED/LOOKING FOR MAINTAINERS -> archived
+
 [![Build Status](https://travis-ci.org/juju4/ansible-mig-postgres.svg?branch=master)](https://travis-ci.org/juju4/ansible-mig-postgres)
 
 # MIG ansible role: postgres
